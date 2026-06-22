@@ -90,7 +90,7 @@ Create a Static Site from the same repository.
 
 ```txt
 Root Directory: frontend
-Build Command: npm install && npm run build
+Build Command: npm install --include=optional && npm run build
 Publish Directory: dist
 ```
 
