@@ -23,7 +23,7 @@ Create a new Web Service from this repository.
 
 ```txt
 Root Directory: backend
-Build Command: npm install && npm run build && npm run prisma:deploy
+Build Command: npm install --include=dev && npm run build && npm run prisma:deploy
 Start Command: npm start
 ```
 
