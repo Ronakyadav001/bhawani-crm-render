@@ -53,12 +53,9 @@ services:
   - type: web
     name: bhawani-crm-frontend
     runtime: static
-    rootDir: frontend
-    buildCommand: npm install --include=optional && npm run build
-    staticPublishPath: dist
-    envVars:
-      - key: VITE_API_URL
-        sync: false
+    rootDir: frontend-static
+    buildCommand: echo "Using prebuilt static frontend"
+    staticPublishPath: .
     routes:
       - type: rewrite
         source: /*

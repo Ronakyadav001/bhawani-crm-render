@@ -86,18 +86,16 @@ Client: client@bhawanifitness.com / Client@12345
 
 ## Frontend on Render
 
-Create a Static Site from the same repository.
+Create a Static Site from the same repository. The `frontend-static` folder contains a prebuilt production frontend connected to:
 
 ```txt
-Root Directory: frontend
-Build Command: npm install --include=optional && npm run build
-Publish Directory: dist
+https://bhawani-crm-render.onrender.com/api
 ```
 
-Add environment variable:
-
-```env
-VITE_API_URL=https://YOUR-BACKEND-URL.onrender.com/api
+```txt
+Root Directory: frontend-static
+Build Command: echo "Using prebuilt static frontend"
+Publish Directory: .
 ```
 
 ## Important notes
