@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useSearchParams } from "react-router-dom";
 import * as Icons from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Bell, LogOut, Menu, Search } from "lucide-react";
@@ -18,8 +18,18 @@ export function AppLayout() {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const routes = visibleRoutesFor(user?.role);
   const active = routes.find((route) => location.pathname === route.path) || routes.find((route) => location.pathname.startsWith(route.path));
+  const searchValue = searchParams.get("search") || "";
+  const canSearch = active?.kind === "resource";
+
+  const updateSearch = (value: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (value.trim()) next.set("search", value);
+    else next.delete("search");
+    setSearchParams(next, { replace: true });
+  };
 
   return (
     <div className="min-h-screen text-ink">
@@ -95,10 +105,16 @@ export function AppLayout() {
             <h1 className="text-2xl font-black text-deep">{active?.label || "Dashboard"}</h1>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-[280px] items-center gap-2 rounded-crm border border-line bg-soft px-3 text-muted">
+            <label className={cn("flex h-10 w-[280px] items-center gap-2 rounded-crm border border-line bg-soft px-3 text-muted", !canSearch && "opacity-60")}>
               <Search size={17} />
-              <span className="text-sm">Search records</span>
-            </div>
+              <input
+                className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-muted"
+                value={canSearch ? searchValue : ""}
+                onChange={(event) => updateSearch(event.target.value)}
+                disabled={!canSearch}
+                placeholder="Search records"
+              />
+            </label>
             <button className="icon-button" type="button" aria-label="Notifications">
               <Bell size={18} />
             </button>

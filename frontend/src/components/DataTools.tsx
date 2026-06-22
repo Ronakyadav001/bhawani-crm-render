@@ -62,9 +62,11 @@ const flatValue = (value: unknown): string => {
   if (typeof value === "boolean") return value ? "Yes" : "No";
   if (typeof value === "number") return String(value);
   if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}T/.test(value)) return dateTime(value);
+  if (typeof value === "string") return value;
   if (Array.isArray(value)) return `${value.length} items`;
   if (typeof value === "object") {
     const record = value as Record<string, unknown>;
+    if (Array.isArray(record.d)) return record.d.join("");
     if (record.fullName || record.email) return String(record.fullName || record.email);
     if (record.user && typeof record.user === "object") {
       const user = record.user as Record<string, unknown>;

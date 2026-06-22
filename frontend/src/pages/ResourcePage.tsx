@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import type { PageRoute, Paginated } from "../types";
 import { api, crmCreate, crmDelete, crmList, crmUpdate } from "../api/client";
 import { ChatWindow, DietPlanBuilder, RecordingUploader, TicketThread, YogaSessionForm } from "../components/Builders";
@@ -32,14 +32,30 @@ export function ResourcePage({ route }: { route: PageRoute }) {
   const resource = route.resource!;
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(searchParams.get("search") || "");
   const [status, setStatus] = useState("all");
   const [page, setPage] = useState(1);
   const [editing, setEditing] = useState<Record<string, unknown> | null>(null);
   const [preview, setPreview] = useState<Record<string, unknown> | null>(null);
   const [deleting, setDeleting] = useState<Record<string, unknown> | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+
+  useEffect(() => {
+    const urlSearch = searchParams.get("search") || "";
+    setSearch((current) => (current === urlSearch ? current : urlSearch));
+    setPage(1);
+  }, [searchParams]);
+
+  const updateSearch = (value: string) => {
+    setSearch(value);
+    setPage(1);
+    const next = new URLSearchParams(searchParams);
+    if (value.trim()) next.set("search", value);
+    else next.delete("search");
+    setSearchParams(next, { replace: true });
+  };
 
   const params = useMemo(() => ({ page, limit: 10, search, status }), [page, search, status]);
   const query = useQuery({
@@ -100,7 +116,7 @@ export function ResourcePage({ route }: { route: PageRoute }) {
 
       <FilterBar
         search={search}
-        onSearch={(value) => { setSearch(value); setPage(1); }}
+        onSearch={updateSearch}
         status={status}
         onStatus={(value) => { setStatus(value); setPage(1); }}
         statusOptions={route.statusOptions}

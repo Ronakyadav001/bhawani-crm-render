@@ -107,7 +107,7 @@ const resources: Record<string, ResourceConfig> = {
   payments: {
     model: "payment",
     module: "payments",
-    searchFields: ["transactionId", "currency", "paymentGateway"],
+    searchFields: ["clientId", "subscriptionId", "transactionId", "currency", "paymentGateway"],
     statusField: "paymentStatus",
     read: [Role.SUPER_ADMIN, Role.SALES_ADMIN],
     create: adminOnly,

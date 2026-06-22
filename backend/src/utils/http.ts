@@ -36,7 +36,12 @@ export const normalizeEmpty = (value: unknown): unknown => {
 
 export const stripSensitive = (value: unknown): unknown => {
   if (Array.isArray(value)) return value.map(stripSensitive);
+  if (value instanceof Date) return value.toISOString();
   if (value && typeof value === "object") {
+    const serializable = value as { toJSON?: () => unknown; constructor?: { name?: string } };
+    if (typeof serializable.toJSON === "function" && serializable.constructor?.name !== "Object") {
+      return serializable.toJSON();
+    }
     const clean: Record<string, unknown> = {};
     for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
       if (["passwordHash", "tokenHash"].includes(key)) continue;
