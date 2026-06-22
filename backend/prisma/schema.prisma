@@ -1,0 +1,578 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum Role {
+  SUPER_ADMIN
+  SALES_ADMIN
+  YOGA_TRAINER
+  DIETICIAN
+  SUPPORT_ADMIN
+  CLIENT
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  PENDING
+}
+
+enum SubscriptionSource {
+  WEBSITE
+  SUPER_ADMIN_MANUAL
+  APP
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum LeadSource {
+  WEBSITE
+  WHATSAPP
+  INSTAGRAM
+  MANUAL
+  REFERRAL
+  APP
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  FOLLOW_UP
+  CONVERTED
+  LOST
+}
+
+enum OnboardingStatus {
+  PENDING
+  SCHEDULED
+  COMPLETED
+  MISSED
+}
+
+enum CallStatus {
+  SCHEDULED
+  COMPLETED
+  MISSED
+  RESCHEDULED
+  CANCELLED
+}
+
+enum MealType {
+  MORNING
+  BREAKFAST
+  MID_MORNING
+  LUNCH
+  EVENING
+  DINNER
+  BEDTIME
+}
+
+enum DietPlanStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum YogaSessionStatus {
+  SCHEDULED
+  LIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum AttendanceStatus {
+  JOINED
+  MISSED
+  PARTIAL
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum TicketSource {
+  APP_CHAT
+  MANUAL
+  WHATSAPP
+  AI_ESCALATION
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  SYSTEM
+}
+
+enum NotificationChannel {
+  PUSH
+  WHATSAPP
+  EMAIL
+  IN_APP
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  READ
+}
+
+enum FeedbackRelatedType {
+  ONBOARDING
+  DIET
+  YOGA_SESSION
+  SUPPORT
+  APP
+}
+
+model User {
+  id                  String         @id @default(cuid())
+  fullName            String         @map("full_name")
+  email               String         @unique
+  phone               String?        @unique
+  passwordHash        String         @map("password_hash")
+  role                Role
+  status              UserStatus     @default(ACTIVE)
+  forcePasswordChange Boolean        @default(true) @map("force_password_change")
+  profileImage        String?        @map("profile_image")
+  createdById         String?        @map("created_by")
+  createdBy           User?          @relation("UserCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  createdUsers        User[]         @relation("UserCreator")
+  lastLoginAt         DateTime?      @map("last_login_at")
+  createdAt           DateTime       @default(now()) @map("created_at")
+  updatedAt           DateTime       @updatedAt @map("updated_at")
+  client              Client?
+  refreshTokens       RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
+  salesClients        Client[]             @relation("ClientSales")
+  trainerClients      Client[]             @relation("ClientTrainer")
+  dieticianClients    Client[]             @relation("ClientDietician")
+  supportClients      Client[]             @relation("ClientSupport")
+  salesLeads          Lead[]               @relation("LeadSales")
+  onboardingCalls     OnboardingCall[]     @relation("OnboardingSales")
+  dietPlans           DietPlan[]           @relation("DietPlanDietician")
+  dietProgressLogs    DietProgressLog[]    @relation("DietProgressDietician")
+  yogaSessions        YogaSession[]        @relation("YogaTrainer")
+  assignedSessions    SessionAssignment[]  @relation("SessionAssignedBy")
+  sessionRecordings   SessionRecording[]   @relation("RecordingTrainer")
+  supportTickets      SupportTicket[]      @relation("TicketSupport")
+  sentChatMessages    ChatMessage[]        @relation("ChatSender")
+  notifications       Notification[]       @relation("UserNotifications")
+  activityLogs        ActivityLog[]        @relation("UserActivity")
+  files               FileAsset[]          @relation("UserFiles")
+
+  @@index([role, status])
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@map("refresh_tokens")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@map("password_reset_tokens")
+}
+
+model Client {
+  id                  String              @id @default(cuid())
+  userId              String              @unique @map("user_id")
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clientCode          String              @unique @map("client_code")
+  gender              String?
+  age                 Int?
+  dateOfBirth         DateTime?           @map("date_of_birth")
+  city                String?
+  state               String?
+  country             String?
+  maritalStatus       String?             @map("marital_status")
+  healthGoal          String?             @map("health_goal")
+  fertilityStatus     String?             @map("fertility_status")
+  medicalConditions   Json?               @map("medical_conditions")
+  notes               String?
+  assignedSalesId     String?             @map("assigned_sales_id")
+  assignedSales        User?               @relation("ClientSales", fields: [assignedSalesId], references: [id], onDelete: SetNull)
+  assignedTrainerId   String?             @map("assigned_trainer_id")
+  assignedTrainer      User?               @relation("ClientTrainer", fields: [assignedTrainerId], references: [id], onDelete: SetNull)
+  assignedDieticianId String?             @map("assigned_dietician_id")
+  assignedDietician    User?               @relation("ClientDietician", fields: [assignedDieticianId], references: [id], onDelete: SetNull)
+  assignedSupportId   String?             @map("assigned_support_id")
+  assignedSupport      User?               @relation("ClientSupport", fields: [assignedSupportId], references: [id], onDelete: SetNull)
+  onboardingStatus    OnboardingStatus    @default(PENDING) @map("onboarding_status")
+  createdAt           DateTime            @default(now()) @map("created_at")
+  updatedAt           DateTime            @updatedAt @map("updated_at")
+  subscriptions       Subscription[]
+  payments            Payment[]
+  onboardingCalls     OnboardingCall[]
+  dietPlans           DietPlan[]
+  dietProgressLogs    DietProgressLog[]
+  sessionAssignments  SessionAssignment[]
+  sessionAttendance   SessionAttendance[]
+  supportTickets      SupportTicket[]
+  chatMessages        ChatMessage[]
+  feedback            Feedback[]
+
+  @@index([assignedSalesId])
+  @@index([assignedTrainerId])
+  @@index([assignedDieticianId])
+  @@index([assignedSupportId])
+  @@map("clients")
+}
+
+model SubscriptionPlan {
+  id                        String         @id @default(cuid())
+  name                      String
+  durationDays              Int            @map("duration_days")
+  price                     Decimal        @db.Decimal(10, 2)
+  description               String?
+  yogaSessionsIncluded      Int            @default(0) @map("yoga_sessions_included")
+  dieticianSupportIncluded  Boolean        @default(false) @map("dietician_support_included")
+  liveClassesIncluded       Boolean        @default(false) @map("live_classes_included")
+  recordingAccess           Boolean        @default(false) @map("recording_access")
+  isActive                  Boolean        @default(true) @map("is_active")
+  createdAt                 DateTime       @default(now()) @map("created_at")
+  updatedAt                 DateTime       @updatedAt @map("updated_at")
+  subscriptions             Subscription[]
+
+  @@map("subscription_plans")
+}
+
+model Subscription {
+  id            String             @id @default(cuid())
+  clientId      String             @map("client_id")
+  client        Client             @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  planId        String             @map("plan_id")
+  plan          SubscriptionPlan   @relation(fields: [planId], references: [id])
+  startDate     DateTime           @map("start_date")
+  endDate       DateTime           @map("end_date")
+  status        SubscriptionStatus @default(PENDING)
+  paymentStatus PaymentStatus      @default(PENDING) @map("payment_status")
+  source        SubscriptionSource @default(SUPER_ADMIN_MANUAL)
+  createdAt     DateTime           @default(now()) @map("created_at")
+  updatedAt     DateTime           @updatedAt @map("updated_at")
+  payments      Payment[]
+
+  @@index([clientId, status])
+  @@map("subscriptions")
+}
+
+model Payment {
+  id              String        @id @default(cuid())
+  clientId        String        @map("client_id")
+  client          Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  subscriptionId  String?       @map("subscription_id")
+  subscription    Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  amount          Decimal       @db.Decimal(10, 2)
+  currency        String        @default("INR")
+  paymentGateway  String        @default("razorpay") @map("payment_gateway")
+  transactionId   String?       @unique @map("transaction_id")
+  paymentStatus   PaymentStatus @default(PENDING) @map("payment_status")
+  paidAt          DateTime?     @map("paid_at")
+  receiptUrl      String?       @map("receipt_url")
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  @@index([clientId, paymentStatus])
+  @@map("payments")
+}
+
+model Lead {
+  id             String     @id @default(cuid())
+  fullName       String     @map("full_name")
+  phone          String
+  email          String?
+  source         LeadSource @default(MANUAL)
+  healthGoal     String?    @map("health_goal")
+  leadStatus     LeadStatus @default(NEW) @map("lead_status")
+  assignedSalesId String?   @map("assigned_sales_id")
+  assignedSales  User?      @relation("LeadSales", fields: [assignedSalesId], references: [id], onDelete: SetNull)
+  notes          String?
+  nextFollowUpAt DateTime?  @map("next_follow_up_at")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+
+  @@index([leadStatus, assignedSalesId])
+  @@map("leads")
+}
+
+model OnboardingCall {
+  id            String     @id @default(cuid())
+  clientId      String     @map("client_id")
+  client        Client     @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  salesAdminId  String?    @map("sales_admin_id")
+  salesAdmin    User?      @relation("OnboardingSales", fields: [salesAdminId], references: [id], onDelete: SetNull)
+  scheduledAt   DateTime   @map("scheduled_at")
+  callType      String     @map("call_type")
+  callLink      String?    @map("call_link")
+  status        CallStatus @default(SCHEDULED)
+  notes         String?
+  completedAt   DateTime?  @map("completed_at")
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+
+  @@index([salesAdminId, status])
+  @@map("onboarding_calls")
+}
+
+model DietPlan {
+  id            String          @id @default(cuid())
+  clientId      String          @map("client_id")
+  client        Client          @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  dieticianId   String?         @map("dietician_id")
+  dietician     User?           @relation("DietPlanDietician", fields: [dieticianId], references: [id], onDelete: SetNull)
+  title         String
+  goal          String?
+  planStartDate DateTime        @map("plan_start_date")
+  planEndDate   DateTime        @map("plan_end_date")
+  status        DietPlanStatus  @default(DRAFT)
+  notes         String?
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+  meals         DietMeal[]
+
+  @@index([clientId, dieticianId, status])
+  @@map("diet_plans")
+}
+
+model DietMeal {
+  id           String   @id @default(cuid())
+  dietPlanId   String   @map("diet_plan_id")
+  dietPlan     DietPlan @relation(fields: [dietPlanId], references: [id], onDelete: Cascade)
+  mealType     MealType @map("meal_type")
+  mealTime     String?  @map("meal_time")
+  foodItems    String   @map("food_items")
+  calories     Int?
+  protein      Int?
+  carbs        Int?
+  fats         Int?
+  instructions String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("diet_meals")
+}
+
+model DietProgressLog {
+  id              String   @id @default(cuid())
+  clientId        String   @map("client_id")
+  client          Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  dieticianId     String?  @map("dietician_id")
+  dietician       User?    @relation("DietProgressDietician", fields: [dieticianId], references: [id], onDelete: SetNull)
+  weight          Decimal? @db.Decimal(6, 2)
+  measurements    Json?
+  energyLevel     Int?     @map("energy_level")
+  sleepQuality    Int?     @map("sleep_quality")
+  complianceScore Int?     @map("compliance_score")
+  notes           String?
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@index([clientId, dieticianId])
+  @@map("diet_progress_logs")
+}
+
+model YogaSession {
+  id                 String               @id @default(cuid())
+  trainerId          String?              @map("trainer_id")
+  trainer            User?                @relation("YogaTrainer", fields: [trainerId], references: [id], onDelete: SetNull)
+  title              String
+  description        String?
+  sessionType        String               @map("session_type")
+  category           String?
+  scheduledStart     DateTime             @map("scheduled_start")
+  scheduledEnd       DateTime             @map("scheduled_end")
+  liveLink           String?              @map("live_link")
+  status             YogaSessionStatus    @default(SCHEDULED)
+  createdAt          DateTime             @default(now()) @map("created_at")
+  updatedAt          DateTime             @updatedAt @map("updated_at")
+  assignments        SessionAssignment[]
+  attendance         SessionAttendance[]
+  recordings         SessionRecording[]
+
+  @@index([trainerId, status])
+  @@map("yoga_sessions")
+}
+
+model SessionAssignment {
+  id          String      @id @default(cuid())
+  sessionId   String      @map("session_id")
+  session     YogaSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  clientId    String      @map("client_id")
+  client      Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  assignedBy  String?     @map("assigned_by")
+  assignedByUser User?    @relation("SessionAssignedBy", fields: [assignedBy], references: [id], onDelete: SetNull)
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  @@unique([sessionId, clientId])
+  @@map("session_assignments")
+}
+
+model SessionAttendance {
+  id              String           @id @default(cuid())
+  sessionId        String           @map("session_id")
+  session          YogaSession      @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  clientId         String           @map("client_id")
+  client           Client           @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  joinedAt         DateTime?        @map("joined_at")
+  leftAt           DateTime?        @map("left_at")
+  durationMinutes  Int?             @map("duration_minutes")
+  attendanceStatus AttendanceStatus @default(JOINED) @map("attendance_status")
+  createdAt        DateTime         @default(now()) @map("created_at")
+
+  @@unique([sessionId, clientId])
+  @@map("session_attendance")
+}
+
+model SessionRecording {
+  id            String      @id @default(cuid())
+  sessionId     String      @map("session_id")
+  session       YogaSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  trainerId     String?     @map("trainer_id")
+  trainer       User?       @relation("RecordingTrainer", fields: [trainerId], references: [id], onDelete: SetNull)
+  title         String
+  recordingUrl  String      @map("recording_url")
+  thumbnailUrl  String?     @map("thumbnail_url")
+  category      String?
+  isPremiumOnly Boolean     @default(true) @map("is_premium_only")
+  createdAt     DateTime    @default(now()) @map("created_at")
+
+  @@map("session_recordings")
+}
+
+model SupportTicket {
+  id                String         @id @default(cuid())
+  clientId          String         @map("client_id")
+  client            Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  assignedSupportId String?        @map("assigned_support_id")
+  assignedSupport   User?          @relation("TicketSupport", fields: [assignedSupportId], references: [id], onDelete: SetNull)
+  subject           String
+  description       String
+  priority          TicketPriority @default(MEDIUM)
+  status            TicketStatus   @default(OPEN)
+  source            TicketSource   @default(MANUAL)
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
+  resolvedAt        DateTime?      @map("resolved_at")
+  chatMessages      ChatMessage[]
+
+  @@index([assignedSupportId, status])
+  @@map("support_tickets")
+}
+
+model ChatMessage {
+  id              String         @id @default(cuid())
+  clientId        String         @map("client_id")
+  client          Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  senderId        String?        @map("sender_id")
+  sender          User?          @relation("ChatSender", fields: [senderId], references: [id], onDelete: SetNull)
+  senderRole      Role           @map("sender_role")
+  message         String
+  messageType     MessageType    @default(TEXT) @map("message_type")
+  relatedTicketId String?        @map("related_ticket_id")
+  relatedTicket   SupportTicket? @relation(fields: [relatedTicketId], references: [id], onDelete: SetNull)
+  aiGenerated     Boolean        @default(false) @map("ai_generated")
+  createdAt       DateTime       @default(now()) @map("created_at")
+
+  @@index([clientId, relatedTicketId])
+  @@map("chat_messages")
+}
+
+model Notification {
+  id        String              @id @default(cuid())
+  userId    String              @map("user_id")
+  user      User                @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String
+  channel   NotificationChannel @default(IN_APP)
+  status    NotificationStatus  @default(PENDING)
+  createdAt DateTime            @default(now()) @map("created_at")
+
+  @@index([userId, status])
+  @@map("notifications")
+}
+
+model Feedback {
+  id          String              @id @default(cuid())
+  clientId    String              @map("client_id")
+  client      Client              @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  relatedType FeedbackRelatedType @map("related_type")
+  relatedId   String?             @map("related_id")
+  rating      Int
+  comment     String?
+  createdAt   DateTime            @default(now()) @map("created_at")
+
+  @@index([clientId, relatedType])
+  @@map("feedback")
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String?  @map("user_id")
+  user      User?    @relation("UserActivity", fields: [userId], references: [id], onDelete: SetNull)
+  role      Role?
+  action    String
+  module    String
+  targetId  String?  @map("target_id")
+  ipAddress String?  @map("ip_address")
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([module, createdAt])
+  @@map("activity_logs")
+}
+
+model FileAsset {
+  id          String   @id @default(cuid())
+  uploadedBy  String?  @map("uploaded_by")
+  uploader    User?    @relation("UserFiles", fields: [uploadedBy], references: [id], onDelete: SetNull)
+  relatedType String?  @map("related_type")
+  relatedId   String?  @map("related_id")
+  fileName    String   @map("file_name")
+  fileUrl     String   @map("file_url")
+  mimeType    String   @map("mime_type")
+  fileSize    Int      @map("file_size")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("files")
+}

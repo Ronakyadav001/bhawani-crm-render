@@ -1,0 +1,15 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: bhawani-crm-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: bhawani_crm
+    ports:
+      - "3306:3306"
+    volumes:
+      - bhawani_crm_mysql:/var/lib/mysql
+
+volumes:
+  bhawani_crm_mysql:

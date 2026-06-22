@@ -1,0 +1,21 @@
+{
+  "name": "bhawani-crm",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "build": "npm --prefix backend run build && npm --prefix frontend run build",
+    "check": "npm --prefix backend run check && npm --prefix frontend run build",
+    "db:migrate": "npm --prefix backend run prisma:migrate",
+    "db:seed": "npm --prefix backend run seed"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Bhawani Fitness premium wellness CRM monorepo"
+}
