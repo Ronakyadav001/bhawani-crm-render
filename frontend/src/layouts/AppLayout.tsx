@@ -105,16 +105,17 @@ export function AppLayout() {
             <h1 className="text-2xl font-black text-deep">{active?.label || "Dashboard"}</h1>
           </div>
           <div className="flex items-center gap-3">
-            <label className={cn("flex h-10 w-[280px] items-center gap-2 rounded-crm border border-line bg-soft px-3 text-muted", !canSearch && "opacity-60")}>
-              <Search size={17} />
-              <input
-                className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-muted"
-                value={canSearch ? searchValue : ""}
-                onChange={(event) => updateSearch(event.target.value)}
-                disabled={!canSearch}
-                placeholder="Search records"
-              />
-            </label>
+            {canSearch && (
+              <label className="flex h-10 w-[280px] items-center gap-2 rounded-crm border border-line bg-soft px-3 text-muted">
+                <Search size={17} />
+                <input
+                  className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-muted"
+                  value={searchValue}
+                  onChange={(event) => updateSearch(event.target.value)}
+                  placeholder="Search records"
+                />
+              </label>
+            )}
             <button className="icon-button" type="button" aria-label="Notifications">
               <Bell size={18} />
             </button>
